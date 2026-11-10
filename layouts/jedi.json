@@ -1,0 +1,130 @@
+{
+  "id": "root",
+  "type": "column",
+  "titlebar": "none",
+  "traffic_lights": [
+    16,
+    16
+  ],
+  "theme": "jedi",
+  "font": "JetBrains Mono",
+  "font_size": 14,
+  "ui_font": "Optima",
+  "terminal_padding": [
+    10,
+    8
+  ],
+  "background": {
+    "gradient": [
+      "#efe5cf",
+      "#d9c9a3"
+    ],
+    "angle": 160
+  },
+  "preview": "layouts/jedi.svg",
+  "children": [
+    {
+      "id": "bar",
+      "type": "block",
+      "size": {
+        "px": 44
+      },
+      "window_drag": true,
+      "content": {
+        "mod": "starwars",
+        "props": {
+          "side": "jedi",
+          "role": "bar"
+        }
+      }
+    },
+    {
+      "id": "body",
+      "type": "row",
+      "divider": {
+        "width": 1,
+        "color": "border"
+      },
+      "floating": [
+        {
+          "id": "droid",
+          "content": {
+            "mod": "starwars",
+            "props": {
+              "side": "jedi",
+              "role": "droid"
+            }
+          },
+          "edge": "right",
+          "align": "end"
+        }
+      ],
+      "children": [
+        {
+          "id": "sidebar",
+          "type": "block",
+          "size": {
+            "px": 264
+          },
+          "min": 200,
+          "max": 440,
+          "content": {
+            "mod": "starwars",
+            "props": {
+              "side": "jedi",
+              "role": "sidebar"
+            }
+          }
+        },
+        {
+          "id": "main",
+          "type": "block",
+          "padding": 10,
+          "content": {
+            "tab": "active",
+            "pane": {
+              "gap": 10,
+              "radius": 10,
+              "background": "background",
+              "lone": true,
+              "border": {
+                "width": 1,
+                "color": "border"
+              },
+              "focus": {
+                "width": 1,
+                "color": "accent"
+              },
+              "header": {
+                "content": {
+                  "mod": "starwars",
+                  "props": {
+                    "side": "jedi",
+                    "role": "header"
+                  }
+                },
+                "height": 36,
+                "position": "top",
+                "reveal": "always"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "status",
+      "type": "block",
+      "size": {
+        "px": 26
+      },
+      "content": {
+        "mod": "starwars",
+        "props": {
+          "side": "jedi",
+          "role": "status"
+        }
+      }
+    }
+  ]
+}
