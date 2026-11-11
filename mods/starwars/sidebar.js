@@ -5,13 +5,20 @@
 
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { spaces, agents, props, run, theme, setAgentOrder } from "herdr";
+import { spaces, agents, panes, home, props, run, theme, setAgentOrder } from "herdr";
 import { side, spaced, pic, art, crystal, iconButton, statusColor, agentName, sfx } from "./kit.js";
 
 // What the agent is on: its terminal title, minus the program's own name and spinner glyphs.
 function task(a) {
   const title = String(a.title ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
   return title && title !== agentName(a) ? title : "";
+}
+
+// Where the agent runs: its pane's live folder (last part, "~" at home) and git branch.
+function where(pane) {
+  const cwd = pane?.cwd ? String(pane.cwd).replace(/\/+$/, "") : "";
+  const folder = !cwd ? "" : cwd === home().replace(/\/+$/, "") ? "~" : cwd.split("/").pop();
+  return [folder, pane?.branch && `⎇ ${pane.branch}`].filter(Boolean).join(" ");
 }
 
 // Secondary text: the Sith side's dim is too faint on near-black, so it uses muted.
@@ -46,7 +53,10 @@ export default class Sidebar {
       .cursor_pointer()
       .when(on, (el) => el.bg(t.selected))
       .hover((st) => st.bg(on ? t.selected : t.hover))
-      .on_click((_e, _cx) => run("space.select", { id: sp.id }))
+      .on_click((e, _cx) => {
+        if (e?.click_count >= 2) run("space.rename", { id: sp.id });
+        else run("space.select", { id: sp.id });
+      })
       .when(on, (el) => el.child(div().absolute().left(0).top(6).bottom(6).w(3).rounded(2).bg(s.blade)))
       .child(pic(`art/holocron-${s.name}.svg`, 18).opacity(on ? 1 : 0.6))
       .child(
@@ -78,7 +88,7 @@ export default class Sidebar {
       .child(blade);
   }
 
-  agent(s, t, a) {
+  agent(s, t, a, pane) {
     return v_flex()
       .id(`ag-${a.address}`)
       .mx(8)
@@ -108,6 +118,9 @@ export default class Sidebar {
           .text_size(11)
           .child(div().flex_none().text_color(a.status === "idle" ? soft(s, t) : statusColor(s, a.status)).child(s.words[a.status] ?? a.status))
           .child(div().flex_1().min_w(0).truncate().text_color(soft(s, t)).child(`${a.space_name} › ${a.tab_name}`)),
+      )
+      .when(Boolean(where(pane)), (el) =>
+        el.child(div().pl(60).truncate().text_size(11).text_color(soft(s, t)).child(where(pane))),
       );
   }
 
@@ -116,6 +129,7 @@ export default class Sidebar {
     const t = theme();
     const all = spaces();
     const ags = agents();
+    const byPane = new Map(panes().map((p) => [p.pane, p]));
     setAgentOrder(ags.map((a) => a.address));
     return div()
       .id("sidebar")
@@ -147,7 +161,7 @@ export default class Sidebar {
           .children(all.map((sp) => this.space(s, t, sp)))
           .child(this.heading(s, t, `${s.agentsTitle}  ${ags.length}`))
           .when(ags.length === 0, (el) => el.child(div().px(16).py(4).text_size(12).italic().text_color(soft(s, t)).child(s.empty)))
-          .children(ags.map((a) => this.agent(s, t, a)))
+          .children(ags.map((a) => this.agent(s, t, a, byPane.get(a.pane))))
           .child(div().h(16))
           .child(div().px(16).text_size(11).italic().text_color(soft(s, t)).child(s.motto))
           .when(s.name === "jedi", (el) => el.child(div().flex_none().mt(14).opacity(0.55).child(pic(s.starfield, 280, 900)))),

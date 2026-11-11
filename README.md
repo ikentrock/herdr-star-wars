@@ -9,7 +9,7 @@ Two Star Wars-inspired layouts for [Herdr](https://herdr.dev), the desktop app f
 ## What you get
 
 - **Lightsaber pane headers.** The blade ignites across the pane you're in and retracts when you leave. A pane whose agent needs you lights up in amber and flickers until you look. Click a hilt to hear it hum.
-- **A themed sidebar.** Spaces become holocrons (Jedi) or conquered systems (Sith). Agents become padawans or apprentices, each with a small saber: it swings while the agent works, holds steady when it's done, flickers when it needs you and is off when idle. Each agent also shows its current task.
+- **A themed sidebar.** Spaces become holocrons (Jedi) or conquered systems (Sith). Agents become padawans or apprentices, each with a small saber: it swings while the agent works, holds steady when it's done, flickers when it needs you and is off when idle. Each agent also shows its current task, its space and tab, and the folder and git branch it's working in. Double-click a space to rename it.
 - **Each side's own words.** Jedi agents are "in training" or "seek your counsel"; Sith agents are "executing orders" or "await your command".
 - **A top bar.** Tabs appear as scrolls (Jedi) or fronts (Sith), with a lit blade under the active one. Double-click a tab to rename it and middle-click to close it. **CRAWL** replays the opening crawl, the speaker mutes the saber sounds, and **Join the Dark Side** / **Return to the Light** switches sides.
 - **A droid.** It floats at the edge of the window and speaks up when an agent finishes or needs you. The Jedi training sphere talks like an old master; the Sith orb files Imperial reports. Click it for tips, or tell it to power down.
