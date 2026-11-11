@@ -1,19 +1,38 @@
 // The top bar: the side's emblem and title, the shown space's tabs as plates
-// (the shown one has a small lit blade under it), a new-tab button, then the
+// (the shown one has a small lit blade under it), a + that opens Herdr's menu
+// for a new terminal or agent, Herdr's Files and Changes panels, then the
 // opening crawl, mute, and the switch to the other side of the Force.
 // Room is left on the left for macOS's window buttons.
 
 import { div } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { spaces, props, run, theme, shared, setShared, openOverlay, window as appWindow } from "herdr";
-import { side, spaced, pic, art, crystal, iconButton, glyph, sfx, muted, toggleMute } from "./kit.js";
+import { spaces, agents, panes, props, run, theme, shared, setShared, openOverlay, layout, window as appWindow } from "herdr";
+import { side, spaced, pic, art, crystal, iconButton, glyph, sfx, muted, toggleMute, tabTitle } from "./kit.js";
 
 export function openCrawl(s) {
   openOverlay({ mod: "starwars", props: { role: "crawl", side: s.name }, kind: "dialog", frame: "none", width: 640, height: 430 });
 }
 
+function find(node, id) {
+  if (node?.id === id) return node;
+  for (const child of node?.children ?? []) {
+    const found = find(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function load(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? "{}") ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export default class Bar {
   init(p, cx) {
+    this.panels = load("panels");
     const s = side(p);
     // The first time a side shows, play its crawl.
     const key = `starwars.crawl.${s.name}`;
@@ -23,7 +42,79 @@ export default class Bar {
     }
   }
 
-  tab(s, t, tab) {
+  // The side panel is remembered per space, as in Herdr's own tab bar: switching
+  // shows that space's choice (closed if it never had one), and opening or
+  // closing it records it.
+  syncPanel(space, panel, body, enabled) {
+    if (!space || !panel) return;
+    const now = panel.hidden ? null : body?.active ?? null;
+    if (space.id !== this.space) {
+      const first = this.space === undefined;
+      this.space = space.id;
+      this.pending = null;
+      if (!(first && !(space.id in this.panels))) {
+        const stored = this.panels[space.id] ?? null;
+        const want = enabled.includes(stored) ? stored : null;
+        if (want !== now) {
+          this.pending = { want, until: Date.now() + 1000 };
+          if (want) {
+            run("layout.select", { stack: "panel-body", child: want });
+            run("layout.show", { id: "panel" });
+          } else run("layout.hide", { id: "panel" });
+          return;
+        }
+      }
+    }
+    // Until the restore lands (or something else won), the old state isn't a choice.
+    if (this.pending) {
+      if (this.pending.want !== now && Date.now() < this.pending.until) return;
+      this.pending = null;
+    }
+    if (this.panels[space.id] === now) return;
+    this.panels[space.id] = now;
+    try {
+      localStorage.setItem("panels", JSON.stringify(this.panels));
+    } catch {}
+  }
+
+  // A word button in the side's title font, like CRAWL; lit while its panel shows.
+  word(s, t, id, label, tip, on, onClick) {
+    return div()
+      .id(id)
+      .flex_none()
+      .px(8)
+      .h(24)
+      .flex()
+      .items_center()
+      .rounded(4)
+      .cursor_pointer()
+      .text_size(11)
+      .font_family(s.titleFont)
+      .text_color(on ? t.foreground : t.muted)
+      .when(on, (el) => el.bg(t.selected))
+      .hover((st) => st.bg(on ? t.selected : t.hover).text_color(t.foreground))
+      .tooltip(tip)
+      .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+      .on_click((_e, cx) => {
+        cx.stop_propagation();
+        onClick();
+      })
+      .child(spaced(label));
+  }
+
+  panelButton(s, t, id, label, tip, panel, body) {
+    const on = Boolean(panel && !panel.hidden && body?.active === id);
+    return this.word(s, t, `panel-${id}`, label, tip, on, () => {
+      sfx("hum");
+      if (on) run("layout.hide", { id: "panel" });
+      else {
+        run("layout.select", { stack: "panel-body", child: id });
+        run("layout.show", { id: "panel" });
+      }
+    });
+  }
+
+  tab(s, t, tab, name) {
     const on = tab.active;
     return div()
       .id(`tab-${tab.id}`)
@@ -52,7 +143,8 @@ export default class Bar {
         run("tab.close", { id: tab.id });
       })
       .child(crystal(s, tab.status, 6))
-      .child(div().text_color(on ? t.foreground : t.muted).font_weight(on ? 600 : 400).child(tab.named ? tab.name : `${s.tabWord} ${tab.index}`))
+      .tooltip(tab.named ? `${s.tabWord} ${tab.index}: ${name}` : `${s.tabWord} ${tab.index}: ${name} (double-click to name it)`)
+      .child(div().max_w(200).truncate().text_color(on ? t.foreground : t.muted).font_weight(on ? 600 : 400).child(name))
       .when(on, (el) =>
         el.child(
           div()
@@ -74,6 +166,14 @@ export default class Bar {
     const space = spaces().find((x) => x.active);
     const tabs = (space?.tabs ?? []).filter((x) => !x.settled || x.active);
     const mac = appWindow()?.platform === "macos";
+    const ags = agents();
+    const pns = panes();
+    const root = layout();
+    const panel = find(root, "panel");
+    const body = find(root, "panel-body");
+    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "council"];
+    const waiting = ags.filter((a) => a.status === "blocked" || a.status === "done").length;
+    this.syncPanel(space, panel, body, enabled);
     return h_flex()
       .id("bar")
       .size_full()
@@ -105,31 +205,27 @@ export default class Bar {
           .gap(4)
           .items_center()
           .overflow_x_scroll()
-          .children(tabs.map((tab) => this.tab(s, t, tab)))
-          .child(iconButton("new-tab", "plus", t.muted, t.hover, () => { sfx("hum"); run("tab.new", {}); }, `New ${s.tabWord.toLowerCase()}`)),
+          .children(tabs.map((tab) => this.tab(s, t, tab, tabTitle(s, tab, ags, pns))))
+          .child(
+            iconButton(
+              "new-tab",
+              "plus",
+              t.muted,
+              t.hover,
+              () => {
+                sfx("hum");
+                openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 });
+              },
+              `New ${s.tabWord.toLowerCase()}: a terminal or an agent`,
+            ),
+          ),
       )
-      .child(
-        div()
-          .id("crawl")
-          .flex_none()
-          .px(8)
-          .h(24)
-          .flex()
-          .items_center()
-          .rounded(4)
-          .cursor_pointer()
-          .text_size(11)
-          .font_family(s.titleFont)
-          .text_color(t.muted)
-          .hover((st) => st.bg(t.hover).text_color(t.foreground))
-          .tooltip("Play the opening crawl")
-          .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
-          .on_click((_e, cx) => {
-            cx.stop_propagation();
-            openCrawl(s);
-          })
-          .child(spaced("CRAWL")),
+      .when(Boolean(panel) && enabled.includes("files"), (el) => el.child(this.panelButton(s, t, "files", "FILES", "Show the files of this space", panel, body)))
+      .when(Boolean(panel) && enabled.includes("changes"), (el) => el.child(this.panelButton(s, t, "changes", "CHANGES", "Show the git changes of this space", panel, body)))
+      .when(Boolean(find(root, "council")), (el) =>
+        el.child(this.panelButton(s, t, "council", waiting ? `${s.councilButton} ${waiting}` : s.councilButton, "Agents waiting on you, and what they ask", panel, body)),
       )
+      .child(this.word(s, t, "crawl", "CRAWL", "Play the opening crawl", false, () => openCrawl(s)))
       .child(iconButton("mute", muted() ? "sound-off" : "sound-on", t.muted, t.hover, () => toggleMute(), muted() ? "Unmute saber sounds" : "Mute saber sounds"))
       .child(
         h_flex()

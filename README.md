@@ -9,12 +9,12 @@ Two Star Wars-inspired layouts for [Herdr](https://herdr.dev), the desktop app f
 ## What you get
 
 - **Lightsaber pane headers.** The blade ignites across the pane you're in and retracts when you leave. A pane whose agent needs you lights up in amber and flickers until you look. Click a hilt to hear it hum.
-- **A themed sidebar.** Spaces become holocrons (Jedi) or conquered systems (Sith). Agents become padawans or apprentices, each with a small saber: it swings while the agent works, holds steady when it's done, flickers when it needs you and is off when idle. Each agent also shows its current task, its space and tab, and the folder and git branch it's working in. Double-click a space to rename it.
+- **A themed sidebar.** Spaces become holocrons (Jedi) or conquered systems (Sith). Agents become padawans or apprentices, each with a small saber: it swings while the agent works, holds steady when it's done, flickers when it needs you and is off when idle. Agents that need you come first. Each agent also shows its current task, its space and tab, and the folder and git branch it's working in. Double-click a space to rename it; right-click it to keep it in a folder (the folder button makes one, click a folder to fold it).
 - **Each side's own words.** Jedi agents are "in training" or "seek your counsel"; Sith agents are "executing orders" or "await your command".
-- **A top bar.** Tabs appear as scrolls (Jedi) or fronts (Sith), with a lit blade under the active one. Double-click a tab to rename it and middle-click to close it. **CRAWL** replays the opening crawl, the speaker mutes the saber sounds, and **Join the Dark Side** / **Return to the Light** switches sides.
+- **A top bar.** Tabs appear as scrolls (Jedi) or fronts (Sith), with a lit blade under the active one. A tab nobody named is called after what its agent is working on. Double-click a tab to rename it and middle-click to close it. **+** opens Herdr's menu to start a terminal or an agent. **FILES** and **CHANGES** open Herdr's Files and Changes panels on the right, remembered per space. **COUNCIL** (Jedi) or **THRONE** (Sith) opens a panel with every agent waiting on you: the end of what it said, its numbered choices as buttons, and a box to answer it. **CRAWL** replays the opening crawl, the speaker mutes the saber sounds, and **Join the Dark Side** / **Return to the Light** switches sides.
 - **A droid.** It floats at the edge of the window and speaks up when an agent finishes or needs you. The Jedi training sphere talks like an old master; the Sith orb files Imperial reports. Click it for tips, or tell it to power down.
 - **An opening crawl.** Each side has its own original story, shown the first time you open that side.
-- **A status bar** with agent counts in each side's words, where you are, and a clock.
+- **A status bar** with agent counts in each side's words, a fleet of starfighters (one per agent: cruising while it works, blinking when it needs you, docked at rest; click one to go to it), where you are, and a clock.
 
 There's also `themes/star-wars.json`, a colors-only dark theme you can use with any layout, Herdr's default included.
 
@@ -62,7 +62,7 @@ Copy `layouts/`, `themes/` and `mods/starwars/` into `~/.config/herdr-app/`, kee
 
 - **Fonts.** The UI uses Optima (Jedi) and Copperplate and Avenir Next (Sith), which come with macOS. On Linux and Windows, Herdr falls back to its own fonts. Terminals use JetBrains Mono, which ships with Herdr.
 - **Sounds.** The saber and droid sounds play only for this layout's own actions. Herdr's alerts for a finished or blocked agent are unchanged. The speaker button in the top bar, or turning sounds off in Herdr's settings, silences them.
-- **Readability.** Every terminal color in both themes has at least 4.5:1 contrast against its background, so agent output stays readable on the light Jedi theme too.
+- **Readability.** Every terminal color in both themes has at least 4.5:1 contrast against its background, so agent output stays readable on the light Jedi theme too. Some programs, Claude Code's dark theme among them, write text in fixed colors that no terminal theme can change, such as pure white, which vanishes on the Jedi parchment. Set `"minimum_contrast": 1.6` in Herdr's `settings.json`: text that would be unreadable is then drawn dark (or light, on the Sith side), and real colors are left alone.
 
 ## Files
 

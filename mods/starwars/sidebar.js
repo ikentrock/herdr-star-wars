@@ -6,13 +6,8 @@
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { spaces, agents, panes, home, props, run, theme, setAgentOrder } from "herdr";
-import { side, spaced, pic, art, crystal, iconButton, statusColor, agentName, sfx } from "./kit.js";
-
-// What the agent is on: its terminal title, minus the program's own name and spinner glyphs.
-function task(a) {
-  const title = String(a.title ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
-  return title && title !== agentName(a) ? title : "";
-}
+import { side, spaced, pic, art, crystal, glyph, iconButton, statusColor, agentName, sfx, task, tabTitle, URGENCY } from "./kit.js";
+import { folders, toggleFolder, openSpaceMenu, openNameDialog } from "./folders.js";
 
 // Where the agent runs: its pane's live folder (last part, "~" at home) and git branch.
 function where(pane) {
@@ -39,13 +34,14 @@ export default class Sidebar {
       .when(Boolean(action), (el) => el.child(action));
   }
 
-  space(s, t, sp) {
+  space(s, t, sp, inFolder = false) {
     const on = sp.active;
     return h_flex()
       .id(`sp-${sp.id}`)
       .relative()
       .mx(8)
       .px(8)
+      .when(inFolder, (el) => el.pl(22))
       .py(6)
       .gap(9)
       .items_center()
@@ -56,6 +52,10 @@ export default class Sidebar {
       .on_click((e, _cx) => {
         if (e?.click_count >= 2) run("space.rename", { id: sp.id });
         else run("space.select", { id: sp.id });
+      })
+      .on_mouse_down("right", (_e, cx) => {
+        cx.stop_propagation();
+        openSpaceMenu(s, sp.id);
       })
       .when(on, (el) => el.child(div().absolute().left(0).top(6).bottom(6).w(3).rounded(2).bg(s.blade)))
       .child(pic(`art/holocron-${s.name}.svg`, 18).opacity(on ? 1 : 0.6))
@@ -69,6 +69,53 @@ export default class Sidebar {
           ),
       )
       .child(crystal(s, sp.status, 7));
+  }
+
+  // A folder of holocrons: click to fold or unfold, double-click or right-click
+  // to rename or delete. Its crystal shows the most urgent status inside.
+  folder(s, t, f, members) {
+    const open = f.open !== false;
+    const order = ["blocked", "done", "working", "idle"];
+    const status = order.find((st) => members.some((sp) => sp.status === st)) ?? null;
+    return h_flex()
+      .id(`fd-${f.id}`)
+      .mx(8)
+      .px(8)
+      .py(5)
+      .gap(8)
+      .items_center()
+      .rounded(s.name === "sith" ? 2 : 8)
+      .cursor_pointer()
+      .hover((st) => st.bg(t.hover))
+      .on_click((e, _cx) => {
+        if (e?.click_count >= 2) openNameDialog(s, { folder: f.id });
+        else toggleFolder(f.id);
+      })
+      .on_mouse_down("right", (_e, cx) => {
+        cx.stop_propagation();
+        openNameDialog(s, { folder: f.id });
+      })
+      .child(div().w(10).flex_none().text_size(10).text_color(soft(s, t)).child(open ? "▾" : "▸"))
+      .child(glyph("folder", soft(s, t), 14))
+      .child(div().flex_1().min_w(0).truncate().text_color(t.muted).font_weight(600).child(f.name))
+      .child(div().flex_none().text_size(11).text_color(soft(s, t)).child(String(members.length)))
+      .when(!open, (el) => el.child(crystal(s, status, 7)));
+  }
+
+  // Folders first (in the order made), each with its holocrons, then the loose ones.
+  // A folded folder still shows the holocron you're in.
+  spaceList(s, t, all) {
+    const f = folders();
+    const known = new Set(f.list.map((x) => x.id));
+    const rows = [];
+    for (const fd of f.list) {
+      const members = all.filter((sp) => f.of[sp.id] === fd.id);
+      rows.push(this.folder(s, t, fd, members));
+      const open = fd.open !== false;
+      for (const sp of members) if (open || sp.active) rows.push(this.space(s, t, sp, true));
+    }
+    for (const sp of all) if (!known.has(f.of[sp.id])) rows.push(this.space(s, t, sp));
+    return rows;
   }
 
   miniSaber(s, t, status) {
@@ -88,7 +135,7 @@ export default class Sidebar {
       .child(blade);
   }
 
-  agent(s, t, a, pane) {
+  agent(s, t, a, pane, room) {
     return v_flex()
       .id(`ag-${a.address}`)
       .mx(8)
@@ -117,7 +164,7 @@ export default class Sidebar {
           .pl(60)
           .text_size(11)
           .child(div().flex_none().text_color(a.status === "idle" ? soft(s, t) : statusColor(s, a.status)).child(s.words[a.status] ?? a.status))
-          .child(div().flex_1().min_w(0).truncate().text_color(soft(s, t)).child(`${a.space_name} › ${a.tab_name}`)),
+          .child(div().flex_1().min_w(0).truncate().text_color(soft(s, t)).child(room)),
       )
       .when(Boolean(where(pane)), (el) =>
         el.child(div().pl(60).truncate().text_size(11).text_color(soft(s, t)).child(where(pane))),
@@ -128,8 +175,17 @@ export default class Sidebar {
     const s = side(props());
     const t = theme();
     const all = spaces();
-    const ags = agents();
-    const byPane = new Map(panes().map((p) => [p.pane, p]));
+    // Padawans who need you come first, then finished, working and resting ones;
+    // within each, Herdr's own order (space, tab, pane).
+    const ags = agents()
+      .map((a, i) => [a, i])
+      .sort(([a, i], [b, j]) => (URGENCY[a.status] ?? 9) - (URGENCY[b.status] ?? 9) || i - j)
+      .map(([a]) => a);
+    const allAgents = agents();
+    const pns = panes();
+    const byPane = new Map(pns.map((p) => [p.pane, p]));
+    const tabsById = new Map(all.flatMap((sp) => sp.tabs.map((tb) => [tb.id, tb])));
+    const room = (a) => `${a.space_name} › ${tabTitle(s, tabsById.get(a.tab), allAgents, pns) || a.tab_name}`;
     setAgentOrder(ags.map((a) => a.address));
     return div()
       .id("sidebar")
@@ -155,13 +211,16 @@ export default class Sidebar {
               s,
               t,
               s.spacesTitle,
-              iconButton("new-space", "plus", t.muted, t.hover, () => { sfx("hum"); run("space.new", {}); }, "New space"),
+              h_flex()
+                .gap(2)
+                .child(iconButton("new-folder", "folder", t.muted, t.hover, () => openNameDialog(s), "New folder (right-click a space to move it in)"))
+                .child(iconButton("new-space", "plus", t.muted, t.hover, () => { sfx("hum"); run("space.new", {}); }, "New space")),
             ),
           )
-          .children(all.map((sp) => this.space(s, t, sp)))
+          .children(this.spaceList(s, t, all))
           .child(this.heading(s, t, `${s.agentsTitle}  ${ags.length}`))
           .when(ags.length === 0, (el) => el.child(div().px(16).py(4).text_size(12).italic().text_color(soft(s, t)).child(s.empty)))
-          .children(ags.map((a) => this.agent(s, t, a, byPane.get(a.pane))))
+          .children(ags.map((a) => this.agent(s, t, a, byPane.get(a.pane), room(a))))
           .child(div().h(16))
           .child(div().px(16).text_size(11).italic().text_color(soft(s, t)).child(s.motto))
           .when(s.name === "jedi", (el) => el.child(div().flex_none().mt(14).opacity(0.55).child(pic(s.starfield, 280, 900)))),

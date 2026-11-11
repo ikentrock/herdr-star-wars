@@ -30,6 +30,9 @@ const SIDES = {
     switchHint: "Switch to the Jedi Archives",
     clock: "IMPERIAL TIME",
     empty: "No apprentices. The Citadel is silent.",
+    councilTitle: "THRONE ROOM",
+    councilButton: "THRONE",
+    councilEmpty: "No apprentice awaits your command. The throne is quiet.",
   },
   jedi: {
     name: "jedi",
@@ -54,6 +57,9 @@ const SIDES = {
     switchHint: "Switch to the Sith Citadel",
     clock: "GALACTIC STANDARD",
     empty: "No padawans yet. Start an agent, you must.",
+    councilTitle: "JEDI COUNCIL",
+    councilButton: "COUNCIL",
+    councilEmpty: "No padawan seeks counsel. Meditate, you may.",
   },
 };
 
@@ -161,4 +167,27 @@ export function iconButton(id, name, color, hover, onClick, tip) {
 
 export function agentName(a) {
   return a?.program?.name ?? a?.app ?? "Agent";
+}
+
+// What the agent is on: its terminal title, minus the program's own name and spinner glyphs.
+export function task(a) {
+  const title = String(a?.title ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
+  return title && title !== agentName(a) ? title : "";
+}
+
+// Most urgent first: needs you, finished unseen, working, at rest.
+export const URGENCY = { blocked: 0, done: 1, working: 2, idle: 3 };
+
+// A tab's name: the one someone gave it; else what its first agent is on (first in
+// Herdr's pane order, so the name doesn't jump as agents change state); else the
+// git branch or folder of its first pane; else "Scroll 2" / "Front 2".
+export function tabTitle(s, tab, ags, pns) {
+  if (!tab) return "";
+  if (tab.named) return tab.name;
+  const first = ags.find((a) => a.tab === tab.id && task(a));
+  if (first) return task(first);
+  const pane = pns.find((p) => p.tab === tab.id && (p.branch || p.cwd));
+  if (pane?.branch) return `⎇ ${pane.branch}`;
+  if (pane?.cwd) return String(pane.cwd).replace(/\/+$/, "").split("/").pop() || `${s.tabWord} ${tab.index}`;
+  return `${s.tabWord} ${tab.index}`;
 }

@@ -7,6 +7,8 @@
 //   status   agent counts in the side's words, location, clock
 //   droid    a floating droid that tells you when an agent needs you
 //   crawl    the opening crawl (a dialog)
+//   council  side panel: agents waiting on you, their question, and a box to answer
+//   folders  holocron folders: the right-click menu (popup) and the name dialog
 
 import { View, div } from "gpui-kit";
 import { props } from "herdr";
@@ -16,8 +18,10 @@ import Header from "./header.js";
 import Status from "./status.js";
 import Droid from "./droid.js";
 import Crawl from "./crawl.js";
+import Folders from "./folders.js";
+import Council from "./council.js";
 
-const ROLES = { bar: Bar, sidebar: Sidebar, header: Header, status: Status, droid: Droid, crawl: Crawl };
+const ROLES = { bar: Bar, sidebar: Sidebar, header: Header, status: Status, droid: Droid, crawl: Crawl, folders: Folders, council: Council };
 
 export default class StarWars extends View {
   init(p, cx) {

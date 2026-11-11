@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="32" viewBox="0 0 56 32">
+  <!-- An original light starfighter, nose to the right: swept wings, a long nose, a blue stripe. -->
+  <path d="M6 16 L18 4 L26 4 L22 13 L50 14.5 L54 16 L50 17.5 L22 19 L26 28 L18 28 Z" fill="#d7d9de" stroke="#6b6f78" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M18 6 L24 6 L21 12 Z M18 26 L24 26 L21 20 Z" fill="#1f6fd1"/>
+  <path d="M24 15 L46 15.4 L46 16.6 L24 17 Z" fill="#1f6fd1" opacity=".55"/>
+  <ellipse cx="32" cy="16" rx="5" ry="2.4" fill="#2f3036"/>
+  <ellipse cx="31" cy="15.3" rx="2" ry=".8" fill="#cfe0f7"/>
+  <rect x="3" y="13" width="6" height="6" rx="1.5" fill="#6b6f78"/>
+</svg>
