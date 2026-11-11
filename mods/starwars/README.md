@@ -4,7 +4,7 @@ Two layouts, one mod (in roles, like Herdr 98):
 
 - `layouts/jedi.json` + `themes/jedi.json`: **Jedi Archives** (light). Parchment
   and archive shelves, holocrons for spaces, padawans for agents, blue blades,
-  a training-remote droid that speaks like an old master.
+  a training-remote droid that gives tips like an old master.
 - `layouts/sith.json` + `themes/sith.json`: **Sith Citadel** (dark). Obsidian
   and a red-tinted starfield, conquered systems for spaces, apprentices for
   agents, red blades, an interrogator orb that files Imperial reports.

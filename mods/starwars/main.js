@@ -5,7 +5,7 @@
 //   sidebar  spaces as holocrons/systems, agents as padawans/apprentices
 //   header   a pane's header: its title and a lightsaber that ignites on focus
 //   status   agent counts in the side's words, location, clock
-//   droid    a floating droid that tells you when an agent needs you
+//   droid    a floating droid that bobs when an agent needs you; click for tips
 //   crawl    the opening crawl (a dialog)
 //   council  side panel: agents waiting on you, their question, and a box to answer
 //   folders  holocron folders: the right-click menu (popup) and the name dialog

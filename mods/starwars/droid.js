@@ -1,12 +1,13 @@
 // The droid, floating at an edge: a Jedi training remote or a Sith
 // interrogator orb. When an agent needs you (blocked) or finished while you
-// looked away (done), it bobs and speaks: the Jedi one in a wise old master's
-// word order, the Sith one in Imperial reports. Click it for counsel.
+// looked away (done), it bobs; Herdr's own toast says which one. Click it for
+// counsel: the Jedi one in a wise old master's word order, the Sith one in
+// Imperial reports.
 
 import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { agents, run, props, theme, placement, shared, setShared } from "herdr";
-import { side, pic, agentName, sfx } from "./kit.js";
+import { agents, props, theme, placement, shared, setShared } from "herdr";
+import { side, pic, sfx } from "./kit.js";
 
 const TIPS = {
   jedi: [
@@ -29,31 +30,14 @@ const TIPS = {
   ],
 };
 
-function speak(s, a) {
-  const name = agentName(a);
-  const where = `${a.space_name} › ${a.tab_name}`;
-  if (s.name === "jedi") {
-    return a.status === "blocked"
-      ? `Waiting for you, ${name} is.\nIn ${where}, your counsel it seeks.`
-      : `Finished, ${name} has.\nIn ${where}, see what it did, you should.`;
-  }
-  return a.status === "blocked"
-    ? `My lord, ${name} in ${where}\nawaits your command.`
-    : `My lord, ${name} in ${where}\nhas completed its mission.`;
-}
-
 export default class Droid {
   init() {
-    this.dismissed = new Set();
     this.tip = null;
   }
 
+  /** True when an agent you aren't looking at needs you or has finished. */
   news() {
-    const list = agents()
-      .filter((a) => (a.status === "blocked" || a.status === "done") && !a.focused)
-      .filter((a) => !this.dismissed.has(`${a.address}:${a.status}`))
-      .sort((a, b) => (a.status === "blocked") - (b.status === "blocked") || a.seq - b.seq);
-    return list.pop() ?? null;
+    return agents().some((a) => (a.status === "blocked" || a.status === "done") && !a.focused);
   }
 
   render(_cx) {
@@ -62,21 +46,8 @@ export default class Droid {
     if (shared(`starwars.droid.${s.name}`) === "off") return div();
     const a = this.news();
     const right = placement()?.edge !== "left";
-    for (const k of [...this.dismissed]) {
-      const i = k.lastIndexOf(":");
-      if (!agents().some((x) => x.address === k.slice(0, i) && x.status === k.slice(i + 1))) this.dismissed.delete(k);
-    }
     let balloon = null;
-    if (a) {
-      const key = `${a.address}:${a.status}`;
-      balloon = this.balloon(s, t, speak(s, a), [
-        [s.name === "jedi" ? "Take me there" : "Go there now", () => {
-          run("agent.focus", { terminal: a.address });
-          this.dismissed.add(key);
-        }],
-        [s.name === "jedi" ? "Later, I will" : "Dismiss", () => this.dismissed.add(key)],
-      ]);
-    } else if (this.tip !== null) {
+    if (this.tip !== null) {
       const tips = TIPS[s.name];
       balloon = this.balloon(s, t, tips[this.tip % tips.length], [
         ["More counsel", () => (this.tip = (this.tip + 1) % tips.length)],
@@ -88,7 +59,7 @@ export default class Droid {
       .id("droid")
       .flex_none()
       .cursor_pointer()
-      .when(Boolean(a), (el) => el.loop("top", { from: 0, to: -6, period: 900 }))
+      .when(a, (el) => el.loop("top", { from: 0, to: -6, period: 900 }))
       .on_click((_e, cx) => {
         this.tip = this.tip === null ? Math.floor(Math.random() * TIPS[s.name].length) : null;
         sfx(`droid-${s.name}`);
