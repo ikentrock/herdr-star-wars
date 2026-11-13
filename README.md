@@ -58,6 +58,20 @@ This switches you back to `main` if you're on one of these layouts, then removes
 
 Copy `layouts/`, `themes/` and `mods/starwars/` into `~/.config/herdr-app/`, keeping the same folder structure.
 
+## VS Code
+
+`vscode/` is a VS Code extension with the same colors: **Jedi Archives**, **Sith Citadel** and **Star Wars (Herdr)**. Its integrated terminal gets the layout's 16 terminal colors, so Claude Code's `light-ansi` or `dark-ansi` theme looks the same there as in Herdr. Every syntax color has at least 4.5:1 contrast.
+
+To install it, package it and install the `.vsix`:
+
+```sh
+cd vscode
+pnpm run package
+code --install-extension herdr-star-wars-themes-0.1.0.vsix
+```
+
+Then pick the theme in **Preferences › Color Theme**. The theme files are generated from `themes/*.json`; run `node build.mjs` in `vscode/` after changing those.
+
 ## Notes
 
 - **Fonts.** The UI uses Optima (Jedi) and Copperplate and Avenir Next (Sith), which come with macOS. On Linux and Windows, Herdr falls back to its own fonts. Terminals use JetBrains Mono, which ships with Herdr.
@@ -74,6 +88,8 @@ themes/star-wars.json           a colors-only theme for any layout
 mods/starwars/                  the mod that draws everything (bar, sidebar,
                                 pane header, status bar, droid, crawl), with
                                 its art, icons and sounds
+vscode/                         the matching VS Code themes, built from
+                                themes/ by vscode/build.mjs
 install.sh                      install / uninstall
 ```
 

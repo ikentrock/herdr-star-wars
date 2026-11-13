@@ -1,0 +1,50 @@
+{
+  "name": "herdr-star-wars-themes",
+  "displayName": "Herdr Star Wars Themes",
+  "description": "Jedi Archives (light) and Sith Citadel (dark) for VS Code, matching the herdr-star-wars layouts and Claude Code inside them.",
+  "version": "0.1.0",
+  "publisher": "ikentrock",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ikentrock/herdr-star-wars.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "keywords": [
+    "theme",
+    "herdr",
+    "jedi",
+    "sith",
+    "light",
+    "dark"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "package": "node build.mjs && pnpm dlx @vscode/vsce package --no-dependencies"
+  },
+  "contributes": {
+    "themes": [
+      {
+        "label": "Jedi Archives",
+        "uiTheme": "vs",
+        "path": "./themes/jedi-archives-color-theme.json"
+      },
+      {
+        "label": "Sith Citadel",
+        "uiTheme": "vs-dark",
+        "path": "./themes/sith-citadel-color-theme.json"
+      },
+      {
+        "label": "Star Wars (Herdr)",
+        "uiTheme": "vs-dark",
+        "path": "./themes/star-wars-color-theme.json"
+      }
+    ]
+  }
+}
