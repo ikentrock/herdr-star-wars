@@ -70,7 +70,7 @@ pnpm run package
 code --install-extension herdr-star-wars-themes-0.1.0.vsix
 ```
 
-Then pick the theme in **Preferences › Color Theme**. The theme files are generated from `themes/*.json`; run `node build.mjs` in `vscode/` after changing those.
+For Cursor, use `cursor --install-extension` with the same file. Then pick the theme in **Preferences › Color Theme**. The theme files are generated from `themes/*.json`; run `node build.mjs` in `vscode/` after changing those.
 
 ## Notes
 
