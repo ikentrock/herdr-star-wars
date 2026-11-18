@@ -77,38 +77,64 @@
           }
         },
         {
-          "id": "main",
-          "type": "block",
-          "padding": 10,
-          "content": {
-            "tab": "active",
-            "pane": {
-              "gap": 10,
-              "radius": 10,
-              "background": "background",
-              "lone": true,
-              "border": {
-                "width": 1,
-                "color": "border"
-              },
-              "focus": {
-                "width": 1,
-                "color": "accent"
-              },
-              "header": {
-                "content": {
-                  "mod": "starwars",
-                  "props": {
-                    "side": "jedi",
-                    "role": "header"
+          "id": "work",
+          "type": "stack",
+          "active": "main",
+          "children": [
+            {
+              "id": "main",
+              "type": "block",
+              "padding": 10,
+              "content": {
+                "tab": "active",
+                "pane": {
+                  "gap": 10,
+                  "radius": 10,
+                  "background": "background",
+                  "lone": true,
+                  "border": {
+                    "width": 1,
+                    "color": "border"
+                  },
+                  "focus": {
+                    "width": 1,
+                    "color": "accent"
+                  },
+                  "header": {
+                    "content": {
+                      "mod": "starwars",
+                      "props": {
+                        "side": "jedi",
+                        "role": "header"
+                      }
+                    },
+                    "height": 36,
+                    "position": "top",
+                    "reveal": "always"
                   }
-                },
-                "height": 36,
-                "position": "top",
-                "reveal": "always"
+                }
               }
+            },
+            {
+              "id": "holonet",
+              "type": "column",
+              "children": [
+                {
+                  "id": "holonet-empty",
+                  "type": "block",
+                  "content": {
+                    "mod": "starwars",
+                    "props": {
+                      "side": "jedi",
+                      "role": "watch",
+                      "part": "empty"
+                    }
+                  }
+                }
+              ],
+              "gap": 10
             }
-          }
+          ]
         },
         {
           "id": "panel",

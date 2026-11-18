@@ -8,6 +8,7 @@ import { h_flex, v_flex } from "gpui-base";
 import { spaces, agents, panes, home, props, run, theme, setAgentOrder } from "herdr";
 import { side, spaced, pic, art, crystal, glyph, iconButton, statusColor, agentName, sfx, task, tabTitle, URGENCY } from "./kit.js";
 import { folders, toggleFolder, openSpaceMenu, openNameDialog } from "./folders.js";
+import { watching, toggleWatch, leaveWatch } from "./watch.js";
 
 // Where the agent runs: its pane's live folder (last part, "~" at home) and git branch.
 function where(pane) {
@@ -35,7 +36,7 @@ export default class Sidebar {
   }
 
   space(s, t, sp, inFolder = false) {
-    const on = sp.active;
+    const on = sp.active && !watching();
     return h_flex()
       .id(`sp-${sp.id}`)
       .relative()
@@ -51,7 +52,10 @@ export default class Sidebar {
       .hover((st) => st.bg(on ? t.selected : t.hover))
       .on_click((e, _cx) => {
         if (e?.click_count >= 2) run("space.rename", { id: sp.id });
-        else run("space.select", { id: sp.id });
+        else {
+          leaveWatch();
+          run("space.select", { id: sp.id });
+        }
       })
       .on_mouse_down("right", (_e, cx) => {
         cx.stop_propagation();
@@ -69,6 +73,43 @@ export default class Sidebar {
           ),
       )
       .child(crystal(s, sp.status, 7));
+  }
+
+  // The Holonet (Sith: Surveillance): its own entry above the spaces. Click it to
+  // open or close the window with every agent's live terminal. Lit while open.
+  holonet(s, t, ags) {
+    const on = watching();
+    const counts = {};
+    for (const a of ags) counts[a.status] = (counts[a.status] ?? 0) + 1;
+    const line = ["working", "blocked", "done"].filter((k) => counts[k]).map((k) => `${counts[k]} ${s.words[k]}`).join(" · ");
+    const status = ["blocked", "done", "working"].find((k) => counts[k]) ?? (ags.length ? "idle" : null);
+    return h_flex()
+      .id("holonet")
+      .relative()
+      .mx(8)
+      .mt(12)
+      .px(8)
+      .py(7)
+      .gap(9)
+      .items_center()
+      .rounded(s.name === "sith" ? 2 : 8)
+      .border(1)
+      .border_color(on ? s.blade : t.border)
+      .cursor_pointer()
+      .when(on, (el) => el.bg(t.selected))
+      .hover((st) => st.bg(on ? t.selected : t.hover))
+      .tooltip(on ? `Close the ${s.watchName}` : `Open the ${s.watchName}: ${s.watchHint}`)
+      .on_click(() => toggleWatch())
+      .child(pic(`art/emblem-${s.name}.svg`, 18).opacity(on ? 1 : 0.75))
+      .child(
+        v_flex()
+          .flex_1()
+          .min_w(0)
+          .child(div().truncate().text_color(t.foreground).font_weight(600).child(s.watchName))
+          .child(div().truncate().text_size(11).text_color(soft(s, t)).child(line || s.watchHint)),
+      )
+      .child(div().flex_none().text_size(11).text_color(soft(s, t)).child(String(ags.length)))
+      .child(crystal(s, status, 7));
   }
 
   // A folder of holocrons: click to fold or unfold, double-click or right-click
@@ -148,6 +189,7 @@ export default class Sidebar {
       .hover((st) => st.bg(a.focused ? t.selected : t.hover))
       .on_click(() => {
         sfx("hum");
+        leaveWatch();
         run("agent.focus", { terminal: a.address });
       })
       .child(
@@ -206,6 +248,7 @@ export default class Sidebar {
           .size_full()
           .overflow_y_scroll()
           .pb(12)
+          .child(this.holonet(s, t, allAgents))
           .child(
             this.heading(
               s,

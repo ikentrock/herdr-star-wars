@@ -9,6 +9,9 @@
 //   crawl    the opening crawl (a dialog)
 //   council  side panel: agents waiting on you, their question, and a box to answer
 //   folders  holocron folders: the right-click menu (popup) and the name dialog
+//   watch    the Holonet / Imperial surveillance window: every agent's live
+//            terminal in one grid (parts: title, cell, empty); the sidebar entry
+//            toggles it, the bar keeps it in step with the agents
 
 import { View, div } from "gpui-kit";
 import { props } from "herdr";
@@ -20,8 +23,9 @@ import Droid from "./droid.js";
 import Crawl from "./crawl.js";
 import Folders from "./folders.js";
 import Council from "./council.js";
+import Watch from "./watch.js";
 
-const ROLES = { bar: Bar, sidebar: Sidebar, header: Header, status: Status, droid: Droid, crawl: Crawl, folders: Folders, council: Council };
+const ROLES = { bar: Bar, sidebar: Sidebar, header: Header, status: Status, droid: Droid, crawl: Crawl, folders: Folders, council: Council, watch: Watch };
 
 export default class StarWars extends View {
   init(p, cx) {

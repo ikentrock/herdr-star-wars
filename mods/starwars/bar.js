@@ -6,7 +6,8 @@
 
 import { div } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { spaces, agents, panes, props, run, theme, shared, setShared, openOverlay, layout, window as appWindow } from "herdr";
+import { spaces, agents, panes, props, run, theme, shared, setShared, openOverlay, layout, checking, nextCommand, window as appWindow } from "herdr";
+import { syncWatch, toggleWatch, leaveWatch } from "./watch.js";
 import { side, spaced, pic, art, crystal, iconButton, glyph, sfx, muted, toggleMute, tabTitle } from "./kit.js";
 
 export function openCrawl(s) {
@@ -39,6 +40,16 @@ export default class Bar {
     if (!shared(key)) {
       setShared(key, true);
       cx.timer.after(600, () => openCrawl(s));
+    }
+    // "starwars:watch" in keys.json (or `herdr-app do starwars.watch`) toggles the Holonet.
+    if (!checking()) {
+      cx.spawn(async (cx) => {
+        for (;;) {
+          const c = await nextCommand();
+          if (c === "watch") toggleWatch();
+          cx.notify();
+        }
+      });
     }
   }
 
@@ -135,7 +146,10 @@ export default class Bar {
       .on_click((e, cx) => {
         cx.stop_propagation();
         if (e?.click_count >= 2) run("tab.rename", { id: tab.id });
-        else run("tab.select", { id: tab.id });
+        else {
+          leaveWatch();
+          run("tab.select", { id: tab.id });
+        }
       })
       .on_mouse_down("middle", (_e, cx) => {
         cx.stop_propagation();
@@ -174,6 +188,7 @@ export default class Bar {
     const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "council"];
     const waiting = ags.filter((a) => a.status === "blocked" || a.status === "done").length;
     this.syncPanel(space, panel, body, enabled);
+    if (!checking()) syncWatch(this, s);
     return h_flex()
       .id("bar")
       .size_full()

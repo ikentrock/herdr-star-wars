@@ -33,6 +33,9 @@ const SIDES = {
     councilTitle: "THRONE ROOM",
     councilButton: "THRONE",
     councilEmpty: "No apprentice awaits your command. The throne is quiet.",
+    watchTitle: "IMPERIAL SURVEILLANCE",
+    watchName: "Surveillance",
+    watchHint: "every apprentice's terminal, live",
   },
   jedi: {
     name: "jedi",
@@ -60,6 +63,9 @@ const SIDES = {
     councilTitle: "JEDI COUNCIL",
     councilButton: "COUNCIL",
     councilEmpty: "No padawan seeks counsel. Meditate, you may.",
+    watchTitle: "HOLONET",
+    watchName: "Holonet",
+    watchHint: "every padawan's terminal, live",
   },
 };
 
